@@ -1,0 +1,24 @@
+# WeChat Mini Program
+private/
+project.private.config.json
+
+# Dependencies
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.log
+*.tmp
+.temp/
+
+# Clipboard
+.gemini-clipboard/
