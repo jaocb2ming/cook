@@ -1,0 +1,112 @@
+<!--pages/history/history.wxml-->
+<view class="history-container">
+  <!-- Header -->
+  <view class="history-header">
+    <view class="header-left" bindtap="goBack">
+      <text class="back-icon">←</text>
+    </view>
+    <text class="header-title">历史记录</text>
+    <view class="header-right" bindtap="toggleSortMenu">
+      <text class="sort-icon">≡</text>
+    </view>
+  </view>
+
+  <!-- Search Bar -->
+  <view class="search-bar">
+    <view class="search-input-wrapper">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="搜索记录..."
+        placeholder-class="search-ph"
+        value="{{searchQuery}}"
+        bindinput="onSearchInput"
+      />
+      <text wx:if="{{searchQuery}}" class="clear-icon" bindtap="clearSearch">✕</text>
+    </view>
+  </view>
+
+  <!-- Sort Menu -->
+  <view wx:if="{{showSortMenu}}" class="sort-menu" catchtap="toggleSortMenu">
+    <view class="sort-menu-content" catchtap="stopPropagation">
+      <text class="sort-menu-title">排序方式</text>
+      <view class="sort-options">
+        <view
+          class="sort-option {{sortBy === 'date' ? 'active' : ''}}"
+          bindtap="selectSort"
+          data-sort="date">
+          <text class="option-label">日期</text>
+          <text wx:if="{{sortBy === 'date'}}" class="order-icon">{{sortOrder === 'desc' ? '↓' : '↑'}}</text>
+        </view>
+        <view
+          class="sort-option {{sortBy === 'intensity' ? 'active' : ''}}"
+          bindtap="selectSort"
+          data-sort="intensity">
+          <text class="option-label">强度</text>
+          <text wx:if="{{sortBy === 'intensity'}}" class="order-icon">{{sortOrder === 'desc' ? '↓' : '↑'}}</text>
+        </view>
+        <view
+          class="sort-option {{sortBy === 'duration' ? 'active' : ''}}"
+          bindtap="selectSort"
+          data-sort="duration">
+          <text class="option-label">时长</text>
+          <text wx:if="{{sortBy === 'duration'}}" class="order-icon">{{sortOrder === 'desc' ? '↓' : '↑'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Logs List -->
+  <scroll-view
+    class="logs-scroll"
+    scroll-y="true"
+    bindscrolltolower="loadMore"
+    refresher-enabled="true"
+    refresher-triggered="{{loading}}"
+    bindrefresherrefresh="onPullDownRefresh">
+
+    <view wx:if="{{filteredLogs.length > 0}}" class="logs-list">
+      <view
+        wx:for="{{filteredLogs}}"
+        wx:key="id"
+        class="log-item"
+        bindtap="editLog"
+        data-id="{{item.id}}">
+        <view class="log-content">
+          <text class="log-title">{{item.title}}</text>
+
+          <!-- Experience intensity bar -->
+          <view class="log-intensity-section">
+            <view class="log-intensity-bar">
+              <view class="intensity-fill level-{{item.intensityLevel}}" style="width: {{item.intensity * 20}}%"></view>
+            </view>
+            <text class="intensity-score">{{item.intensity}}</text>
+          </view>
+
+          <!-- Duration display -->
+          <view class="log-meta">
+            <text class="meta-text">{{item.duration}}分钟</text>
+          </view>
+        </view>
+        <text class="log-time">{{item.timeDisplay}}</text>
+      </view>
+    </view>
+
+    <!-- Empty state -->
+    <view wx:else class="empty-state">
+      <text class="empty-icon">📭</text>
+      <text class="empty-text">暂无记录</text>
+      <text wx:if="{{searchQuery}}" class="empty-hint">试试其他搜索关键词</text>
+    </view>
+
+    <!-- Load more indicator -->
+    <view wx:if="{{filteredLogs.length > 0 && hasMore}}" class="load-more">
+      <text class="load-more-text">加载更多...</text>
+    </view>
+
+    <!-- No more data indicator -->
+    <view wx:if="{{filteredLogs.length > 0 && !hasMore}}" class="no-more">
+      <text class="no-more-text">已加载全部记录</text>
+    </view>
+  </scroll-view>
+</view>

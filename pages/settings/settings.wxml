@@ -1,0 +1,279 @@
+<!--pages/settings/settings.wxml-->
+<view class="container">
+  <!-- 返回按钮 -->
+  <view class="header">
+    <view class="back-button" bindtap="goBack">
+      <image src="/assets/icons/back.svg" mode="aspectFit" class="back-icon"/>
+    </view>
+  </view>
+
+  <!-- 目标设置 -->
+  <view class="section">
+    <text class="section-title">目标设置</text>
+
+    <view class="settings-group">
+      <view class="settings-item" bindtap="showGoalModal">
+        <view class="item-left">
+          <view class="item-icon goal-icon">
+            <image src="/assets/icons/target.svg" mode="aspectFit" class="icon-svg"/>
+          </view>
+          <text class="item-text">设置年度目标</text>
+        </view>
+        <view class="item-right">
+          <text class="item-value">{{yearlyGoal}}</text>
+          <text class="item-arrow">›</text>
+        </view>
+      </view>
+
+      <view class="settings-item" bindtap="showResetProgressModal">
+        <view class="item-left">
+          <view class="item-icon reset-icon">
+            <image src="/assets/icons/reset.svg" mode="aspectFit" class="icon-svg"/>
+          </view>
+          <text class="item-text">重置年度进度</text>
+        </view>
+        <text class="item-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 云端同步 -->
+  <view class="section">
+    <text class="section-title">云端同步</text>
+
+    <view class="settings-group">
+      <view class="settings-item">
+        <view class="item-left">
+          <view class="item-icon cloud-icon">
+            <image src="/assets/icons/cloud.svg" mode="aspectFit" class="icon-svg"/>
+          </view>
+          <view class="item-text-group">
+            <text class="item-text">启用云端备份</text>
+            <text class="item-desc">自动备份到 Supabase</text>
+          </view>
+        </view>
+        <switch checked="{{cloudSync}}" bindchange="onCloudSyncChange" color="#7c3aed" />
+      </view>
+
+      <view wx:if="{{cloudSync && syncKey}}" class="settings-item" bindtap="showSyncKeyModal">
+        <view class="item-left">
+          <view class="item-icon sync-icon">
+            <image src="/assets/icons/key.svg" mode="aspectFit" class="icon-svg"/>
+          </view>
+          <view class="item-text-group">
+            <text class="item-text">同步码</text>
+            <text class="item-desc">点击查看或复制</text>
+          </view>
+        </view>
+        <text class="item-arrow">›</text>
+      </view>
+
+      <view class="settings-item" bindtap="showRestoreModal">
+        <view class="item-left">
+          <view class="item-icon restore-icon">
+            <image src="/assets/icons/download.svg" mode="aspectFit" class="icon-svg"/>
+          </view>
+          <view class="item-text-group">
+            <text class="item-text">从云端恢复数据</text>
+            <text class="item-desc">输入同步码恢复备份</text>
+          </view>
+        </view>
+        <text class="item-arrow">›</text>
+      </view>
+
+      <view wx:if="{{!cloudSync}}" class="sync-notice">
+        <text class="notice-icon">⚠️</text>
+        <text class="notice-text">当前未开启云同步，数据仅存在手机本地。若卸载微信或更换手机，数据将永久丢失且无法找回。</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 数据管理 -->
+  <view class="section">
+    <text class="section-title">数据管理</text>
+
+    <view class="settings-group">
+      <view class="settings-item" bindtap="exportData">
+        <view class="item-left">
+          <view class="item-icon export-icon">
+            <image src="/assets/icons/upload.svg" mode="aspectFit" class="icon-svg"/>
+          </view>
+          <text class="item-text">导出数据 (CSV)</text>
+        </view>
+        <text class="item-arrow">›</text>
+      </view>
+
+      <view class="settings-item danger" bindtap="showClearDataModal">
+        <view class="item-left">
+          <view class="item-icon danger-icon">
+            <image src="/assets/icons/clear.svg" mode="aspectFit" class="icon-svg"/>
+          </view>
+          <text class="item-text danger-text">清空所有数据</text>
+        </view>
+        <text class="item-arrow warning-icon">⚠</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 关于 -->
+  <view class="section">
+    <text class="section-title">关于</text>
+
+    <view class="settings-group">
+      <view class="settings-item" bindtap="showPrivacyPolicy">
+        <view class="item-left">
+          <view class="item-icon privacy-icon">
+            <image src="/assets/icons/shield.svg" mode="aspectFit" class="icon-svg"/>
+          </view>
+          <text class="item-text">隐私政策</text>
+        </view>
+        <text class="item-arrow">›</text>
+      </view>
+
+      <view class="settings-item">
+        <view class="item-left">
+          <view class="item-icon version-icon">
+            <image src="/assets/icons/info.svg" mode="aspectFit" class="icon-svg"/>
+          </view>
+          <text class="item-text">版本</text>
+        </view>
+        <text class="item-value">{{version}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部文字 -->
+  <view class="footer">
+    <text class="footer-text">Cookcord</text>
+  </view>
+
+  <!-- 设置年度目标弹窗 -->
+  <view wx:if="{{showGoalModal}}" class="modal-overlay {{showGoalModal ? 'active' : ''}}" bindtap="hideGoalModal">
+    <view class="modal-content goal-modal" catchtap="stopPropagation">
+      <view class="modal-handle"></view>
+
+      <view class="modal-header">
+        <text class="modal-title">年度目标</text>
+        <view class="modal-close-btn" bindtap="hideGoalModal">
+          <text class="close-icon">✕</text>
+        </view>
+      </view>
+
+      <scroll-view class="modal-body" scroll-y="true">
+        <view class="goal-setup-body">
+          <view class="goal-value-display">
+            <text class="goal-number-large">{{tempGoal}}</text>
+            <text class="goal-unit">次 / 年</text>
+          </view>
+
+          <view class="premium-form-section">
+            <text class="item-label">目标数值</text>
+            <slider class="premium-slider"
+                    min="0"
+                    max="365"
+                    value="{{tempGoal}}"
+                    activeColor="#7c3aed"
+                    backgroundColor="rgba(255,255,255,0.05)"
+                    block-color="#ffffff"
+                    block-size="22"
+                    bindchange="onGoalSliderChange" />
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="modal-footer">
+        <view class="primary-save-btn" bindtap="confirmGoal">确认修改</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 危险操作确认弹窗 (清空/重置) -->
+  <view wx:if="{{showClearModal || showResetModal}}" class="modal-overlay {{showClearModal || showResetModal ? 'active' : ''}}" bindtap="{{showClearModal ? 'hideClearModal' : 'hideResetModal'}}">
+    <view class="modal-content danger-modal" catchtap="stopPropagation">
+      <view class="modal-handle"></view>
+
+      <view class="modal-body danger-body">
+        <view class="danger-icon-large mt-24">
+          <text>⚠</text>
+        </view>
+
+        <text class="danger-title">{{showClearModal ? '清空所有数据？' : '重置进度？'}}</text>
+        <text class="danger-desc">
+          {{showClearModal ? '此操作将永久删除所有记录、历史和偏好设置，且无法撤销。' : '这将把您的年度进度计数重置为 0，但会保留您的Cook记录。'}}
+        </text>
+
+        <view class="danger-actions">
+          <view class="btn btn-danger-filled" bindtap="{{showClearModal ? 'confirmClearData' : 'confirmResetProgress'}}">
+            {{showClearModal ? '确认全部清空' : '确认重置进度'}}
+          </view>
+          <view class="btn btn-ghost mt-12" bindtap="{{showClearModal ? 'hideClearModal' : 'hideResetModal'}}">
+            取消
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 同步码弹窗 -->
+  <view wx:if="{{showSyncKeyModal}}" class="modal-overlay {{showSyncKeyModal ? 'active' : ''}}" bindtap="hideSyncKeyModal">
+    <view class="modal-content sync-key-modal" catchtap="stopPropagation">
+      <view class="modal-handle"></view>
+
+      <view class="modal-header">
+        <text class="modal-title">您的同步码</text>
+        <view class="modal-close-btn" bindtap="hideSyncKeyModal">
+          <text class="close-icon">✕</text>
+        </view>
+      </view>
+
+      <view class="modal-body">
+        <view class="sync-key-container">
+          <text class="sync-key-text">{{syncKey}}</text>
+          <view class="sync-key-actions">
+            <view class="action-btn" bindtap="copySyncKey">
+              <text>复制</text>
+            </view>
+          </view>
+        </view>
+        <text class="sync-key-warning">请妥善保存此同步码，它是找回数据的唯一凭证。</text>
+      </view>
+
+      <view class="modal-footer">
+        <view class="primary-save-btn" bindtap="hideSyncKeyModal">关闭</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 恢复数据弹窗 -->
+  <view wx:if="{{showRestoreModal}}" class="modal-overlay {{showRestoreModal ? 'active' : ''}}" bindtap="hideRestoreModal">
+    <view class="modal-content restore-modal" catchtap="stopPropagation">
+      <view class="modal-handle"></view>
+
+      <view class="modal-header">
+        <text class="modal-title">从云端恢复</text>
+        <view class="modal-close-btn" bindtap="hideRestoreModal">
+          <text class="close-icon">✕</text>
+        </view>
+      </view>
+
+      <view class="modal-body">
+        <text class="restore-desc">输入您的同步码，将从云端恢复数据。</text>
+
+        <view class="input-group">
+          <text class="input-label">同步码</text>
+          <input class="premium-input"
+                 type="text"
+                 placeholder="粘贴您的同步码"
+                 value="{{inputSyncKey}}"
+                 bindinput="onSyncKeyInput" />
+        </view>
+
+        <text class="restore-warning">⚠️ 恢复数据将覆盖当前本地所有记录，此操作无法撤销。</text>
+      </view>
+
+      <view class="modal-footer">
+        <view class="primary-save-btn" bindtap="confirmRestore">确认恢复</view>
+      </view>
+    </view>
+  </view>
+</view>

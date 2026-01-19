@@ -1,0 +1,340 @@
+<!--pages/index/index.wxml-->
+<view class="container {{showModal ? 'modal-open' : ''}}">
+  <!-- 设置图标 -->
+  <view class="settings-icon" bindtap="goToSettings">
+    <image src="/assets/icons/settings.svg" mode="aspectFit" class="icon"></image>
+  </view>
+
+  <!-- 历史记录按钮 -->
+  <view class="history-icon" bindtap="goToHistory">
+    <text class="history-text">历史</text>
+  </view>
+
+  <!-- 年度目标卡片 -->
+  <view class="goal-card">
+    <view class="goal-header">
+      <text class="goal-label">年度目标</text>
+      <text class="goal-progress-text">完成进度</text>
+    </view>
+    <view class="goal-content">
+      <view class="goal-number">
+        <text class="current-count">{{currentCount}}</text>
+        <text class="total-count">/{{yearlyGoal}}</text>
+      </view>
+      <view class="progress-container">
+        <text class="progress-percentage">{{progressPercentage}}%</text>
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: {{progressPercentage}}%"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 活动热力图 -->
+  <view class="heatmap-section">
+    <view class="section-header">
+      <text class="section-title">活动分布</text>
+    </view>
+    
+    <view class="heatmap-container">
+      <view class="heatmap-grid">
+        <!-- 周标签 -->
+        <view class="week-labels">
+          <text class="week-label">一</text>
+          <text class="week-label">二</text>
+          <text class="week-label">三</text>
+          <text class="week-label">四</text>
+          <text class="week-label">五</text>
+          <text class="week-label">六</text>
+          <text class="week-label">日</text>
+        </view>
+        
+        <!-- 热力图网格 -->
+        <scroll-view scroll-x class="heatmap-scroll">
+          <view class="heatmap-content">
+            <view wx:for="{{heatmapRows}}" wx:key="label" class="heatmap-row">
+              <view wx:for="{{item.days}}" wx:key="date"
+                    class="heatmap-cell level-{{item.level}}"
+                    data-date="{{item.date}}"
+                    data-count="{{item.count}}"
+                    bindtap="onHeatmapCellClick">
+              </view>
+            </view>
+          </view>
+        </scroll-view>
+        
+        <!-- 月份标签 -->
+        <view class="month-labels">
+          <text wx:for="{{monthLabels}}" wx:key="label" 
+                class="month-label" 
+                style="left: {{item.position * 15}}px;">{{item.label}}</text>
+        </view>
+      </view>
+      
+      <!-- 图例 -->
+      <view class="heatmap-legend">
+        <text class="legend-text">少</text>
+        <view class="legend-cells">
+          <view class="legend-cell level-0"></view>
+          <view class="legend-cell level-1"></view>
+          <view class="legend-cell level-2"></view>
+          <view class="legend-cell level-3"></view>
+          <view class="legend-cell level-4"></view>
+        </view>
+        <text class="legend-text">多</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 最近记录 -->
+  <view class="recent-logs-section">
+    <view class="section-header">
+      <text class="section-title">最近记录</text>
+    </view>
+    
+    <view wx:if="{{recentLogs.length > 0}}" class="logs-list">
+      <view wx:for="{{recentLogs}}" wx:key="id" class="log-item" bindtap="editLog" data-id="{{item.id}}">
+        <view class="log-content">
+          <text class="log-title">{{item.title}}</text>
+
+          <!-- 体验强度进度条 -->
+          <view class="log-intensity-section">
+            <view class="log-intensity-bar">
+              <view class="intensity-fill level-{{item.intensityLevel}}" style="width: {{item.intensity * 20}}%"></view>
+            </view>
+            <text class="intensity-score">{{item.intensity}}</text>
+          </view>
+        </view>
+        <text class="log-time">{{item.timeDisplay}}</text>
+      </view>
+    </view>
+    
+    <view wx:else class="empty-logs">
+      <text class="empty-text">暂无记录。点击下方开始Cook吧！</text>
+    </view>
+  </view>
+
+  <!-- 计时器显示 -->
+  <view wx:if="{{isTimerActive}}" class="timer-card">
+    <view class="timer-bg-glow"></view>
+    <view class="timer-header">
+      <view class="timer-dot"></view>
+      <text class="timer-label">COOKING IN PROGRESS</text>
+    </view>
+    <view class="timer-display">
+      <text class="timer-value">{{timerDisplay}}</text>
+    </view>
+  </view>
+
+  <!-- 底部操作按钮 -->
+  <view class="action-bar {{isTimerActive ? 'timer-active' : ''}}">
+    <block wx:if="{{!isTimerActive}}">
+      <view class="start-timer-btn" bindtap="startTimer">
+       
+        <text class="btn-text">他又行了</text>
+      </view>
+      <view class="add-log-btn-small" bindtap="showAddLogModal">
+        <text class="btn-icon">+</text>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="finish-btn gradient-purple" bindtap="stopTimer">
+        <text class="btn-text">结束Cook</text>
+      </view>
+    </block>
+  </view>
+
+  <!-- 添加/编辑记录弹窗 -->
+  <view wx:if="{{showModal}}" class="modal-overlay {{showModal ? 'active' : ''}}" bindtap="hideAddLogModal">
+    <view class="modal-content add-log-modal" catchtap="stopPropagation">
+      <!-- 顶部装饰手柄 -->
+      <view class="modal-handle"></view>
+      
+      <view class="modal-header">
+        <!-- 左侧删除按钮 (仅编辑模式显示) -->
+        <view class="modal-left-action" wx:if="{{isEditing}}" bindtap="deleteCurrentLog">
+           <!-- 简单的垃圾桶图标绘制或使用 SVG -->
+           <image src="/assets/icons/clear.svg" class="delete-icon" mode="aspectFit" style="width: 20px; height: 20px; opacity: 0.6; filter: invert(0.3) sepia(1) saturate(5) hue-rotate(-50deg);"></image>
+        </view>
+        <view class="modal-left-placeholder" wx:else></view>
+
+        <text class="modal-title">{{isEditing ? '编辑记录' : '添加记录'}}</text>
+        
+        <view class="modal-close-btn" bindtap="hideAddLogModal">
+          <text class="close-icon">✕</text>
+        </view>
+      </view>
+      
+      <scroll-view class="modal-body" scroll-y="true">
+        <view class="form-container" >
+          <!-- 时间选择区域 (日式简约风格) -->
+          <view class="premium-form-section">
+            <view class="datetime-grid">
+              <view class="form-item">
+                <text class="item-label">DATE</text>
+                <picker mode="date" value="{{newLog.date}}" bindchange="onDateChange">
+                  <view class="picker-value-box">
+                    <text class="picker-value">{{newLog.dateDisplay}}</text>
+                  </view>
+                </picker>
+              </view>
+              <view class="form-item">
+                <text class="item-label">TIME</text>
+                <picker mode="time" value="{{newLog.time}}" bindchange="onTimeChange">
+                  <view class="picker-value-box">
+                    <text class="picker-value">{{newLog.time}}</text>
+                  </view>
+                </picker>
+              </view>
+            </view>
+          </view>
+
+          <!-- 时长选择区域 -->
+          <view class="premium-form-section">
+            <text class="item-label">DURATION (MIN)</text>
+            
+            <!-- 大号数字输入框 -->
+            <view class="duration-input-wrapper">
+               <input class="duration-input" 
+                      type="number" 
+                      value="{{newLog.duration}}" 
+                      bindinput="onDurationInput"
+                      maxlength="3" />
+               <text class="duration-unit">min</text>
+            </view>
+
+            <view class="duration-pill-group">
+              <view wx:for="{{durationOptions}}" wx:key="value"
+                    class="duration-pill {{newLog.duration === item.value ? 'active' : ''}}"
+                    bindtap="onDurationSelect"
+                    data-value="{{item.value}}">
+                <text class="pill-label">{{item.label}}</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 强度滑动区域 -->
+          <view class="premium-form-section">
+            <view class="intensity-header-row">
+                <text class="item-label">INTENSITY</text>
+                <view class="intensity-value-large {{intensityLevelClass}}">
+                    <text class="val-num">{{newLog.intensity}}</text>
+                    <text class="val-txt">{{intensityLabel}}</text>
+                </view>
+            </view>
+
+            <view class="intensity-control-wrapper">
+                <!-- 快速选择按钮 -->
+                <view class="quick-select-row">
+                    <view class="quick-btn {{newLog.intensity >= 1 && newLog.intensity < 2 ? 'active' : ''}}" bindtap="quickSetIntensity" data-val="1">1</view>
+                    <view class="quick-btn {{newLog.intensity >= 2 && newLog.intensity < 3 ? 'active' : ''}}" bindtap="quickSetIntensity" data-val="2">2</view>
+                    <view class="quick-btn {{newLog.intensity >= 3 && newLog.intensity < 4 ? 'active' : ''}}" bindtap="quickSetIntensity" data-val="3">3</view>
+                    <view class="quick-btn {{newLog.intensity >= 4 && newLog.intensity < 5 ? 'active' : ''}}" bindtap="quickSetIntensity" data-val="4">4</view>
+                    <view class="quick-btn {{newLog.intensity >= 5 ? 'active' : ''}}" bindtap="quickSetIntensity" data-val="5">5</view>
+                </view>
+                
+                <!-- 滑动条 -->
+                <view class="slider-wrapper">
+                  <slider class="premium-slider"
+                          min="10"
+                          max="50"
+                          value="{{newLog.intensity * 10}}"
+                          activeColor="{{intensityColor}}"
+                          backgroundColor="rgba(255,255,255,0.05)"
+                          block-color="#ffffff"
+                          block-size="24"
+                          bindchange="onIntensityChange"
+                          bindchanging="onIntensityChange" />
+                </view>
+            </view>
+          </view>
+
+          <!-- 备注输入区域 -->
+          <view class="premium-form-section">
+            <text class="item-label">NOTES</text>
+            <view class="notes-input-wrapper">
+              <textarea class="premium-textarea"
+                        placeholder="记录一下这次的感受吧..."
+                        placeholder-class="notes-ph"
+                        value="{{newLog.notes}}"
+                        bindinput="onNotesInput"
+                        maxlength="200"
+                        show-confirm-bar="{{false}}">
+              </textarea>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+      
+      <view class="modal-footer">
+        <view class="save-button-wrapper">
+          <view class="primary-save-btn" bindtap="confirmAddLog">
+            <text class="save-btn-text">{{isEditing ? '更新记录' : '保存记录'}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 每日记录弹窗 -->
+  <view wx:if="{{showDailyModal}}" class="modal-overlay {{showDailyModal ? 'active' : ''}}" bindtap="hideDailyRecordsModal">
+    <view class="modal-content daily-modal" catchtap="stopPropagation">
+      <!-- 顶部装饰手柄 -->
+      <view class="modal-handle"></view>
+
+      <view class="modal-header">
+        <view class="modal-left-placeholder"></view>
+        <text class="modal-title">{{formatSelectedDate(selectedDate)}}</text>
+        <view class="modal-close-btn" bindtap="hideDailyRecordsModal">
+          <text class="close-icon">✕</text>
+        </view>
+      </view>
+
+      <scroll-view class="modal-body" scroll-y="true">
+        <view class="daily-logs-container">
+          <view wx:if="{{selectedDateLogs.length > 0}}" class="daily-logs-list">
+            <view
+              wx:for="{{selectedDateLogs}}"
+              wx:key="id"
+              class="daily-log-item"
+              bindtap="editLogFromDaily"
+              data-id="{{item.id}}">
+              <view class="daily-log-content">
+                <text class="daily-log-title">{{item.title}}</text>
+
+                <!-- 体验强度进度条 -->
+                <view class="log-intensity-section">
+                  <view class="log-intensity-bar">
+                    <view class="intensity-fill level-{{item.intensityLevel}}" style="width: {{item.intensity * 20}}%"></view>
+                  </view>
+                  <text class="intensity-score">{{item.intensity}}</text>
+                </view>
+
+                <!-- 时长显示 -->
+                <view class="daily-log-meta">
+                  <text class="meta-text">{{item.duration}}分钟</text>
+                </view>
+              </view>
+              <text class="daily-log-time">{{item.timeDisplay}}</text>
+            </view>
+          </view>
+
+          <!-- 空状态 -->
+          <view wx:else class="daily-empty-state">
+            <text class="empty-icon">📭</text>
+            <text class="empty-text">这一天没有记录</text>
+            <text class="empty-hint">点击下方按钮添加记录吧</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="modal-footer">
+        <view class="save-button-wrapper">
+          <view class="primary-save-btn" bindtap="hideDailyRecordsModal">
+            <text class="save-btn-text">关闭</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
