@@ -608,7 +608,7 @@
 }
 
 .add-log-btn-small:active {
-  transform: scale(0.95) rotate(90deg);
+  transform: none;
   box-shadow: 0 4px 16px rgba(105, 39, 151, 0.3);
 }
 
