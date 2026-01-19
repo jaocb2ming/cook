@@ -208,7 +208,8 @@
 }
 
 .heatmap-cell.level-0 {
-  background-color: rgba(255, 255, 255, 0.06);
+  background: linear-gradient(145deg, rgba(45, 35, 55, 0.4), rgba(35, 25, 50, 0.5));
+  box-shadow: inset 0 0 8px rgba(139, 92, 246, 0.08);
 }
 
 .heatmap-cell.level-1 {
@@ -271,7 +272,8 @@
 }
 
 .legend-cell.level-0 {
-  background-color: #1e1e1e;
+  background: linear-gradient(145deg, rgba(45, 35, 55, 0.4), rgba(35, 25, 50, 0.5));
+  box-shadow: inset 0 0 8px rgba(139, 92, 246, 0.08);
 }
 
 .legend-cell.level-1 {
